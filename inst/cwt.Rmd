@@ -1,0 +1,45 @@
+# Wavelet Scale Correspondance
+
+
+```{r}
+
+for (i in seq(1, 50, 5)) {
+  wav = return.wavelet('mexh') %>% { scale.wavelet(i, .)$y }
+  plot(wav)
+  cat(sum(wav > 0), i, "\n")
+  }
+```
+
+```{r}
+for (i in seq(1, 50, 5)) {
+  wav = return.wavelet('nmexh') %>% { scale.wavelet(i, .)$y }
+  plot(wav)
+  cat(sum(wav < 0), i, "\n")
+  }
+```
+
+```{r}
+
+eic = { dnorm(seq(-6, 6, by =0.1)) } %>% { ./max(.) }
+plot(eic)
+
+
+for (i in seq(1, 50, 5)) {
+  wav = cwt(eic, i, 'mexh')
+  print(plot(wav, main = i))
+  cat(sum(wav > 0), i, "\n")
+}
+```
+
+```{r}
+
+eic = { dnorm(seq(-6, 6, by =0.1)) + dnorm(seq(-6, 6, by =0.1), mean = 3) } %>% { ./max(.) }
+plot(eic)
+
+
+for (i in seq(1, 50, 5)) {
+  wav = cwt(eic, i, 'nmexh')
+  print(plot(wav, main = i))
+  cat(sum(wav < 0), i, "\n")
+}
+```
