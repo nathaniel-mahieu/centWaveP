@@ -1,0 +1,63 @@
+```{r}
+library(xcms)
+library(ggplot2)
+library(gridExtra)
+devtools::load_all("C:/Dropbox/GitHub/centWaveP")
+
+xr = xcmsRaw("../../../Projects/Datasets/2nm118a_nh2_negative_ecoli_1213/2NM118A_HILICAnnoWgN14_2NM111G_12.mzXML")
+
+roi.l = cent(xr, ppm = 2, prefilter = c(4,0), maxskip = 5) # ppm is added to both sides
+eic.l = lapply(sample(roi.l, 3000), roiToEic, xr, padding=100))
+eic.noise.l = lapply(eic.l, estimateBaselineNoise, peakwidth = c(15, 60), minslope.peak = 20000)
+
+peaks = lapply(seq_along(eic.noise.l), function(i) {
+  cat(i, "\r       ")
+  wave(eic.noise.l[[i]], peakwidth = c(15, 70), valleywidth.min = 15, sensitivity = 1, smooth = T)
+})
+
+
+
+index = lapply(seq(peaks), function(i) {
+  wns = peaks[[i]]$descent.fold.above.descentbaseline
+
+  cbind(roi = rep(i, length(wns)), wsn = wns, num = seq_along(wns))
+  
+  }) %>% do.call(what = rbind)
+
+
+ps0 = lapply(sample(which(index[,"wsn"] < 1), 16, replace = T), function(x) {
+  plotWavePeak(unname(index[x, "num"]), eic.noise.l[[index[x,"roi"]]], peaks[[index[x,"roi"]]])
+})
+
+ps1 = lapply(sample(index[,"wsn"] %>% { which(. > 1  & . < 2) }, 16, replace = T), function(x) {
+  plotWavePeak(unname(index[x, "num"]), eic.noise.l[[index[x,"roi"]]], peaks[[index[x,"roi"]]])
+})
+
+ps2 = lapply(sample(index[,"wsn"] %>% { which(. > 2  & . < 3) }, 16, replace = T), function(x) {
+  plotWavePeak(unname(index[x, "num"]), eic.noise.l[[index[x,"roi"]]], peaks[[index[x,"roi"]]])
+})
+
+ps3 = lapply(sample(index[,"wsn"] %>% { which(. > 3  & . < 5) }, 16, replace = T), function(x) {
+  plotWavePeak(unname(index[x, "num"]), eic.noise.l[[index[x,"roi"]]], peaks[[index[x,"roi"]]])
+})
+
+ps4 = lapply(sample(index[,"wsn"] %>% { which(. > 5) }, 16, replace=T), function(x) {
+  plotWavePeak(unname(index[x, "num"]), eic.noise.l[[index[x,"roi"]]], peaks[[index[x,"roi"]]])
+})
+
+
+do.call(grid.arrange, ps0)  
+do.call(grid.arrange, ps1)  
+do.call(grid.arrange, ps2)
+do.call(grid.arrange, ps3)
+do.call(grid.arrange, ps4)
+
+
+which(!sapply(peaks, is.null))
+i = 99
+plotWavePeak(1, eic.noise.l[[i]], peaks[[i]])
+peaks[[i]]
+i = i+1
+
+
+```

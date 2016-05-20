@@ -1,5 +1,14 @@
-# Wavelet Based Peak Detection
+```{r setup, cache=FALSE, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.width=11, fig.height=7, base64_images=F, fig.align="center", message=F, warning=F, fig.path='figure_wave/')
+```
 
+
+# Wavelet Based Peak Detection
+```{r}
+library(centWaveP)
+library(ggplot2)
+```
 ## HILIC, 60 minute gradient, 150 mm x 1 mm x 3 um, 50 uL/min
 ```{r}
 
@@ -19,14 +28,14 @@ ggplot(subset(eic.n,abs(rt - 1300) < 200)) +
 
 
 peaks = wave(eic.n, peakwidth = c(5,70), valleywidth.min = 10)
-peaks = subset(peaks, waVelet.sn.wavelet.baseline > 0.95)
+peaks = subset(peaks, descent.fold.above.descentbaseline > 0.95)
 
 for (i in seq_along(peaks[,1])) {
   plotWavePeak(i, eic.n, peaks) %>% print
-  cat ("Press [enter] to continue")
-  line <- readline()
+  #cat ("Press [enter] to continue")
+  #line <- readline()
   
-  if (line == "x") {break;}
+  #if (line == "x") {break;}
 }
 ```
 

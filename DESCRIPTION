@@ -1,7 +1,12 @@
 Package: centWaveP
 Type: Package
 Title: CWT Based Chromatographic Peak Detection
-Description: Continuous wavelet transform based peak detection in chromatographic data.  This package is a modification of the original publication by Tauttenahn et. al. Modifications include: alternative signal to noise and baseline estimation; chromatogram smoothing; wavelet based valley tracking; improved code documentation; improved integration bound selection; and various tweaks.
+Description: Continuous wavelet transform based peak detection in
+    chromatographic data. This package is a modification of the original publication
+    by Tauttenahn et. al. Modifications include: alternative signal to noise and
+    baseline estimation; chromatogram smoothing; wavelet based valley tracking;
+    improved code documentation; improved integration bound selection; and various
+    tweaks.
 Version: 0.1.0001
 Date: 2016-05-12
 Author: Nathaniel Guy Mahieu <nathaniel.mahieu@wustl.edu>
@@ -12,5 +17,9 @@ Depends:
     magrittr,
 Imports:
     matrixStats,
-	zoo,
-	xcms
+    zoo,
+    xcms,
+	Rcpp
+LinkingTo:
+	Rcpp
+RoxygenNote: 5.0.1

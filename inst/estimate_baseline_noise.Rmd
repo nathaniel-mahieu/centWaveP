@@ -1,4 +1,14 @@
+```{r setup, cache=FALSE, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.width=11, fig.height=7, base64_images=F, fig.align="center", message=F, warning=F, fig.path='figure_baseline/')
+```
+
 # Baseline Estimations
+
+```{r}
+library(centWaveP)
+library(ggplot2)
+```
 
 ## HILIC, 60 minute gradient, 150 mm x 1 mm x 3 um, 50 uL/min
 ```{r}
@@ -57,6 +67,6 @@ ggplot(eic.n) +
   geom_line(aes(x = rt, y = i)) +
   geom_line(aes(x = rt, y =noise.local.sd), colour = "red") +
   geom_line(aes(x = rt, y =baseline), colour = "orchid") +
-  geom_line(aes(x = rt, y =noise.baseline.sd), colour = "green")
+  geom_line(aes(x = rt, y =noise.baseline.sd), colour = "green") + main("Inappropriate max peakwidth setting.")
 
 ```

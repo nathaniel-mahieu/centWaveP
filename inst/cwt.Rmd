@@ -1,10 +1,18 @@
-# Wavelet Scale Correspondance
+```{r setup, cache=FALSE, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.width=11, fig.height=7, base64_images=F, fig.align="center", message=F, warning=F, fig.path='figure_cwt/')
+```
 
+
+# Wavelet Scale Correspondance
+```{r}
+library(centWaveP)
+```
 
 ```{r}
 
 for (i in seq(1, 50, 5)) {
-  wav = return.wavelet('mexh') %>% { scale.wavelet(i, .)$y }
+  wav = centWaveP:::return.wavelet('mexh') %>% { centWaveP:::scale.wavelet(i, .)$y }
   plot(wav)
   cat(sum(wav > 0), i, "\n")
   }
@@ -12,7 +20,7 @@ for (i in seq(1, 50, 5)) {
 
 ```{r}
 for (i in seq(1, 50, 5)) {
-  wav = return.wavelet('nmexh') %>% { scale.wavelet(i, .)$y }
+  wav = centWaveP:::return.wavelet('nmexh') %>% { centWaveP:::scale.wavelet(i, .)$y }
   plot(wav)
   cat(sum(wav < 0), i, "\n")
   }

@@ -1,0 +1,53 @@
+#' Detect regions of interest (regions of m/z vs rt space with high densitites of peaks)
+#' 
+#' \code{cent} returns a list of all regions of interest as rectangles in m/z vs rt space.
+#' 
+#' This function is a C++ implementation of the region of interest detection algorithm described in the centWave paper. The algorithm steps through scans sequentially and performs the following steps for every peak:
+#' \enumerate{
+#'  \item If there exists an ROI encompassing the mass, add the peak to that ROI.
+#'  \item If an appropriate ROI does not exist, create a new ROI.
+#'  \item Check all unfinished ROIs - if a peak hasn't been added within the previous \code{maxskip} scans save it.
+#'  }
+#' 
+#' @param mz numeric A vector of exact mass centroids, all scans concatenated.
+#' @param i numeric A vector of intensities corresponding to \code{mz}, all scans concatenated.
+#' @param scanindex integer A vector of integers corresponding to the start of a new scan in the \code{mz} and \code{i} vectors.
+#' @param ppm numeric the ppm mass error acceptable before a new ROI is initialized. This ppm is allowed on both sides of the mass.
+#' @param prefilter numeric a two integer vector.  The first indicates the minimum number of peaks an ROI must contain to be retained.  The second indicates the minimum intensity those muct be.
+#' @param maxskip integer The number of scans an ROI must not contain a peak before clossing the ROI.  \emph{This is an addition to the original algorithm. Useful for QE data.}
+#' 
+#' @return A list, one entry for each region of interest.  
+#' 
+#' 
+#' @section Attribution:
+#' This code was modified from the originally published centWave algorithm [1].  The code was orginally distributed and obtained under the GPL2 license via the xcms software package [2]. The original algorithms depend on the wavelet analysis code included in the MassSpecWavelet package [3]. All code herein was obtained under the GPL2 license and remains under the GPL 3 license or greater.
+#' 
+#' @seealso 
+#' \link{\code{wave}} \link{\code{estimateBaselineNoise}}
+#' 
+#' [1] Tautenhahn, R., B?ttcher, C., & Neumann, S. (2008). Highly sensitive feature detection for high resolution LC/MS. BMC bioinformatics, 9(1), 1. \link[dest=http://dx.doi.org/10.1186/1471-2105-9-504]{http://dx.doi.org/10.1186/1471-2105-9-504}
+#' [2] Smith, C. A., Want, E. J., O'Maille, G., Abagyan, R., & Siuzdak, G. (2006). XCMS: processing mass spectrometry data for metabolite profiling using nonlinear peak alignment, matching, and identification. Analytical chemistry, 78(3), 779-787. \link[dest=10.1021/ac051437y]{10.1021/ac051437y}
+#' [3] Du, P., Kibbe, W. A., & Lin, S. M. (2006). Improved peak detection in mass spectrum by incorporating continuous wavelet transform-based pattern matching. Bioinformatics, 22(17), 2059-2065. \link[dest=10.1093/bioinformatics/btl355]{10.1093/bioinformatics/btl355}
+#' 
+#' @export
+#' 
+
+#' @useDynLib centWaveP
+#' @importFrom Rcpp sourceCpp
+
+cent = function(mz, i, scanindex,  ppm = 2, prefilter = c(0,0), maxskip = 0) {
+  #SEXP findmzROI(SEXP mz, SEXP intensity, SEXP scanindex, SEXP mzrange, SEXP scanrange, SEXP lastscan, SEXP dev, SEXP minEntries, SEXP prefilter, SEXP noise, SEXP maxskip)
+  .Call("findmzROI",
+    as.double(mz),
+    as.double(i),
+    as.integer(scanindex), 
+    as.double(range(mz)),
+    as.integer(c(1,length(scanindex))), 
+    as.integer(length(scanindex)),
+    as.double(ppm * 1E-6), 
+    as.integer(0), 
+    as.integer(prefilter), 
+    as.integer(0), 
+    as.integer(maxskip),
+    PACKAGE="centWaveP")
+  }
