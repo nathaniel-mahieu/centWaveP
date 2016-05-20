@@ -41,8 +41,9 @@ nrow(index)
 ```
 
 ```
-## [1] 139
+## [1] 136
 ```
+
 
 ### SN < 1
 
@@ -53,7 +54,7 @@ ps0 = lapply(sample(which(index[,"wsn"] < 1), 16, replace = T), function(x) {
 do.call(grid.arrange, ps0)  
 ```
 
-<img src="figure_comparison/unnamed-chunk-3-1.png" title="plot of chunk unnamed-chunk-3" alt="plot of chunk unnamed-chunk-3" style="display: block; margin: auto;" />
+<img src="figure_comparison/unnamed-chunk-4-1.png" title="plot of chunk unnamed-chunk-4" alt="plot of chunk unnamed-chunk-4" style="display: block; margin: auto;" />
 ### 1 < SN < 2
 
 ```r
@@ -63,7 +64,7 @@ ps1 = lapply(sample(index[,"wsn"] %>% { which(. > 1  & . < 2) }, 16, replace = T
 do.call(grid.arrange, ps1)  
 ```
 
-<img src="figure_comparison/unnamed-chunk-4-1.png" title="plot of chunk unnamed-chunk-4" alt="plot of chunk unnamed-chunk-4" style="display: block; margin: auto;" />
+<img src="figure_comparison/unnamed-chunk-5-1.png" title="plot of chunk unnamed-chunk-5" alt="plot of chunk unnamed-chunk-5" style="display: block; margin: auto;" />
 ### 2 < SN < 3
 
 ```r
@@ -73,7 +74,7 @@ ps2 = lapply(sample(index[,"wsn"] %>% { which(. > 2  & . < 3) }, 16, replace = T
 do.call(grid.arrange, ps2)
 ```
 
-<img src="figure_comparison/unnamed-chunk-5-1.png" title="plot of chunk unnamed-chunk-5" alt="plot of chunk unnamed-chunk-5" style="display: block; margin: auto;" />
+<img src="figure_comparison/unnamed-chunk-6-1.png" title="plot of chunk unnamed-chunk-6" alt="plot of chunk unnamed-chunk-6" style="display: block; margin: auto;" />
 ### 3 < SN < 4
 
 ```r
@@ -83,7 +84,7 @@ ps3 = lapply(sample(index[,"wsn"] %>% { which(. > 3  & . < 5) }, 16, replace = T
 do.call(grid.arrange, ps3)
 ```
 
-<img src="figure_comparison/unnamed-chunk-6-1.png" title="plot of chunk unnamed-chunk-6" alt="plot of chunk unnamed-chunk-6" style="display: block; margin: auto;" />
+<img src="figure_comparison/unnamed-chunk-7-1.png" title="plot of chunk unnamed-chunk-7" alt="plot of chunk unnamed-chunk-7" style="display: block; margin: auto;" />
 ### 5 < SN 
 
 ```r
@@ -93,7 +94,7 @@ ps4 = lapply(sample(index[,"wsn"] %>% { which(. > 5) }, 16, replace=T), function
 do.call(grid.arrange, ps4)
 ```
 
-<img src="figure_comparison/unnamed-chunk-7-1.png" title="plot of chunk unnamed-chunk-7" alt="plot of chunk unnamed-chunk-7" style="display: block; margin: auto;" />
+<img src="figure_comparison/unnamed-chunk-8-1.png" title="plot of chunk unnamed-chunk-8" alt="plot of chunk unnamed-chunk-8" style="display: block; margin: auto;" />
 
 ## xcms::findPeaks.centWave
 
@@ -114,7 +115,7 @@ peaks.xcms = findPeaks.centWave(xr, ppm = 2, peakwidth = c(15, 60), snthresh = 0
 ## 
 ##  Detecting chromatographic peaks ... 
 ##  % finished: 0 10 20 30 40 50 60 70 80 90 100 
-##  530  Peaks.
+##  441  Peaks.
 ```
 
 ```r
@@ -122,7 +123,7 @@ nrow(peaks.xcms)
 ```
 
 ```
-## [1] 530
+## [1] 441
 ```
 
 ```r
@@ -130,20 +131,20 @@ head(peaks.xcms)
 ```
 
 ```
-##            mz    mzmin    mzmax       rt     rtmin    rtmax       into
-## [1,] 225.0079 225.0075 225.0080  115.720   92.7069  136.562 32123174.6
-## [2,] 567.3541 567.3531 567.3548 1005.980  993.0220 1053.370  5647315.1
-## [3,] 647.2426 647.2417 647.2433 1720.410 1710.8600 1727.740  1380589.9
-## [4,] 261.0569 261.0568 261.0571  769.188  746.0230  780.455  5133386.7
-## [5,] 418.1583 418.1578 418.1587 1557.680 1541.8300 1576.330  1781535.5
-## [6,] 358.1093 358.1089 358.1099 1337.840 1332.7500 1345.760   205826.5
-##            intb        maxo     sn
-## [1,] 30641510.0 15777098.00     86
-## [2,]  1415153.0   169545.69      2
-## [3,]  1380574.7   192009.64 192009
-## [4,]  3728750.8   257335.88      4
-## [5,]  1680869.2   161874.88     14
-## [6,]   204360.3    44780.32     25
+##            mz    mzmin    mzmax       rt    rtmin    rtmax      into
+## [1,] 612.8240 612.8233 612.8246  962.053  954.758  967.675 1594222.6
+## [2,] 207.0390 207.0389 207.0394  129.254  122.483  137.122  799475.6
+## [3,] 328.1153 328.1151 328.1157 2000.120 1984.260 2011.440 8815864.7
+## [4,] 328.1153 328.1151 328.1157 2000.120 1984.260 2011.440 8815864.7
+## [5,] 544.3498 544.3492 544.3505 1243.640 1242.510 1282.070 4271358.7
+## [6,] 544.3495 544.3488 544.3503 1179.240 1178.670 1179.800  207298.2
+##           intb     maxo     sn
+## [1,] 1594210.2 221493.9 221493
+## [2,]  786179.0 155846.3     12
+## [3,] 8815837.5 777535.7 777535
+## [4,] 8815837.5 777535.7 777535
+## [5,] 3195635.5 154251.5      5
+## [6,]  159851.8 135370.6      6
 ```
 
 
@@ -163,7 +164,7 @@ head(peaks.xcms)
 do.call(grid.arrange, ps4)
 ```
 
-<img src="figure_comparison/unnamed-chunk-9-1.png" title="plot of chunk unnamed-chunk-9" alt="plot of chunk unnamed-chunk-9" style="display: block; margin: auto;" />
+<img src="figure_comparison/unnamed-chunk-10-1.png" title="plot of chunk unnamed-chunk-10" alt="plot of chunk unnamed-chunk-10" style="display: block; margin: auto;" />
 ### 5 < SN < 10
 
 ```r
@@ -180,7 +181,7 @@ do.call(grid.arrange, ps4)
 do.call(grid.arrange, ps4)
 ```
 
-<img src="figure_comparison/unnamed-chunk-10-1.png" title="plot of chunk unnamed-chunk-10" alt="plot of chunk unnamed-chunk-10" style="display: block; margin: auto;" />
+<img src="figure_comparison/unnamed-chunk-11-1.png" title="plot of chunk unnamed-chunk-11" alt="plot of chunk unnamed-chunk-11" style="display: block; margin: auto;" />
 ### 10 < SN < 100
 
 ```r
@@ -197,7 +198,7 @@ do.call(grid.arrange, ps4)
 do.call(grid.arrange, ps4)
 ```
 
-<img src="figure_comparison/unnamed-chunk-11-1.png" title="plot of chunk unnamed-chunk-11" alt="plot of chunk unnamed-chunk-11" style="display: block; margin: auto;" />
+<img src="figure_comparison/unnamed-chunk-12-1.png" title="plot of chunk unnamed-chunk-12" alt="plot of chunk unnamed-chunk-12" style="display: block; margin: auto;" />
 ### SN > 100
 
 ```r
@@ -214,4 +215,4 @@ do.call(grid.arrange, ps4)
 do.call(grid.arrange, ps4)
 ```
 
-<img src="figure_comparison/unnamed-chunk-12-1.png" title="plot of chunk unnamed-chunk-12" alt="plot of chunk unnamed-chunk-12" style="display: block; margin: auto;" />
+<img src="figure_comparison/unnamed-chunk-13-1.png" title="plot of chunk unnamed-chunk-13" alt="plot of chunk unnamed-chunk-13" style="display: block; margin: auto;" />
