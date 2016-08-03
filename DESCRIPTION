@@ -14,7 +14,7 @@ Maintainer: Nathaniel Guy Mahieu <nathaniel.mahieu@wustl.edu>
 License: GPL-3
 Depends:
     R (>= 3.1.0),
-    magrittr,
+    magrittr
 Imports:
     matrixStats,
     zoo,
