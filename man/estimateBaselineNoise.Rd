@@ -4,7 +4,7 @@
 \alias{estimateBaselineNoise}
 \title{From an EIC estimate the local noise level and baseline of the signal}
 \usage{
-estimateBaselineNoise(eic, peakwidth, minslope.peak = 1000, plot.tf = F)
+estimateBaselineNoise(eic, peakwidth)
 }
 \arguments{
 \item{eic}{data.frame A data frame with columns "i" and "rt"}
@@ -25,6 +25,6 @@ Baseline estimation is performed by excluding all smoothed regions with a slope 
 Local noise estimation is performed by taking the standard deviation of the difference between the smoothed and the unsmoothed EICs.
 }
 \seealso{
-\link{\code{wave}}
+\code{\link{wave}}
 }
 

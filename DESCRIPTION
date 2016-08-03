@@ -19,7 +19,10 @@ Imports:
     matrixStats,
     zoo,
     xcms,
-	Rcpp
+	Rcpp,
+	TTR,
+	signal,
+	baseline
 LinkingTo:
 	Rcpp
 RoxygenNote: 5.0.1

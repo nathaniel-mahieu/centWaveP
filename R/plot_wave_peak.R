@@ -19,6 +19,8 @@ plotWavePeak = function(i, eic, peaks) {
   
   metadata = data.frame(peaks[i,,drop=F])
   
+  eic = as.data.frame(eic)
+  
   cols = c("Local SD"="red","Wavelet Bounds"="blue","Descent Bounds"="green", "Baseline" = "orchid", "Smoothed EIC" = "orange", "EIC" = "black")
   
   theme_nate <- function(base_size = 16)
@@ -46,19 +48,18 @@ plotWavePeak = function(i, eic, peaks) {
   }
   
   range = c(metadata$wavelet.start.rt-25, metadata$wavelet.end.rt+25)
-  ggplot(subset(data.frame(eic), rt < range[2] & rt > range[1])) + 
+  ggplot(subset(eic, rt < range[2] & rt > range[1])) + 
     geom_line(aes(x = rt, y = i, col = "EIC")) +
     geom_line(aes(x = rt, y = baseline, col = "Baseline")) +
     geom_line(aes(x = rt, y = i.sg, colour = "Smoothed EIC"), alpha = 0.7) +
-    geom_line(aes(x = rt, y = noise.local.sd, colour = "Local SD"), alpha = 0.7) +
+    geom_line(aes(x = rt, y = noise.sd, colour = "Local SD"), alpha = 0.7) +
     geom_vline(data = metadata, aes(xintercept = wavelet.start.rt+0.03, colour="Wavelet Bounds"), alpha = 0.8)+
     geom_vline(data = metadata, aes(xintercept = wavelet.end.rt+0.06, colour="Wavelet Bounds"), alpha = 0.8)+
     geom_vline(data = metadata, aes(xintercept = wavelet.location.rt+0.09, colour="Wavelet Bounds"), alpha = 0.8) +
     geom_vline(data = metadata, aes(xintercept = descent.rtcentroid, colour="Descent Bounds"), alpha = 0.8) + 
     geom_vline(data = metadata, aes(xintercept = descent.rtmin, colour="Descent Bounds"), alpha = 0.8) +
     geom_vline(data = metadata, aes(xintercept = descent.rtmax, colour="Descent Bounds"), alpha = 0.8) + 
-    ggtitle(paste(metadata$sn.sg.above.min)) + 
     scale_colour_manual(name="Colours",values=cols) +
-    theme_nate() +
-    coord_cartesian(ylim=c(0,max(metadata$descent.maxo)*1.1)) + ggtitle(paste(sep=" ","wh:",  round(metadata$wavelet.height.above.waveletbaseline,1), "dm:", round(metadata$descent.fold.above.descentbaseline,1), "wm:", round(metadata$wavelet.fold.above.waveletbaseline, 1)))
+    theme_nate() + 
+    coord_cartesian(ylim=c(0,max(metadata$descent.maxo)*1.1)) + ggtitle(paste(sep=" ", "df:", round(metadata$descent.fold.above.descentbaseline,1), "wf:", round(metadata$wavelet.fold.above.waveletbaseline, 1)))
 }

@@ -32,26 +32,23 @@
 #' @seealso 
 #' \link{\code{wave}} \link{\code{estimateBaselineNoise}}
 #' 
-#' [1] Tautenhahn, R., Böttcher, C., & Neumann, S. (2008). Highly sensitive feature detection for high resolution LC/MS. BMC bioinformatics, 9(1), 1. \link[dest=http://dx.doi.org/10.1186/1471-2105-9-504]{http://dx.doi.org/10.1186/1471-2105-9-504}
+#' [1] Tautenhahn, R., B?ttcher, C., & Neumann, S. (2008). Highly sensitive feature detection for high resolution LC/MS. BMC bioinformatics, 9(1), 1. \link[dest=http://dx.doi.org/10.1186/1471-2105-9-504]{http://dx.doi.org/10.1186/1471-2105-9-504}
 #' [2] Smith, C. A., Want, E. J., O'Maille, G., Abagyan, R., & Siuzdak, G. (2006). XCMS: processing mass spectrometry data for metabolite profiling using nonlinear peak alignment, matching, and identification. Analytical chemistry, 78(3), 779-787. \link[dest=10.1021/ac051437y]{10.1021/ac051437y}
 #' [3] Du, P., Kibbe, W. A., & Lin, S. M. (2006). Improved peak detection in mass spectrum by incorporating continuous wavelet transform-based pattern matching. Bioinformatics, 22(17), 2059-2065. \link[dest=10.1093/bioinformatics/btl355]{10.1093/bioinformatics/btl355}
 #' 
 #' @export
 #' 
 
-wave = function(eic, peakwidth=c(20,50), valleywidth.min = 10, sensitivity = 1, smooth = T) {
+wave = function(eic, peakwidth=c(20,50), valleywidth.min = 7, sensitivity = 1, smooth = T) {
   # This is the core, wavelet based peak detection code.
   # Changes from the original centWave code: separated out baseline and noise level detection. centWave actually relies heavily on these functions and those were not described in the original paper.  The input to this function now includes baseline and noise.sd at each timepoint of the EIC.  Additional differences may have been introduced.  Some bugs were fixed and clarity was increased.
   ## Other changes. Integration works for varying scan rates.  Baseline integration uses supplied baseline.  Retention time is supplied as centroid.
   
-  # eic columns: i, i.sg, inroi, baseline, noise.sd
-  eic = as.data.frame(eic)
-  
   # Turn peakwidths into scales
-  scalerange = round(peakwidth / mean(diff(eic$rt)) * 0.5)
+  scalerange = round(peakwidth / mean(diff(eic[,"rt"])) * 0.5)
   
   #Filter terrible EICs before slow wavelet stuff
-  if (sum((eic$i.sg - eic$i) > eic$noise.local.sd) < scalerange[1]) {return(NULL)}
+  if (sum((eic[,"i"] - eic[,"baseline"]) > eic[,"noise.sd"], na.rm=T) < scalerange[1]) {return(NULL)}
   
   currscale = scalerange[1]
   scales = c()
@@ -63,13 +60,13 @@ wave = function(eic, peakwidth=c(20,50), valleywidth.min = 10, sensitivity = 1, 
   scales = floor(scales)
   #scales = seq(from=scalerange[1], to=scalerange[2], by=2)
   
-  min.valley.scale = round(valleywidth.min / mean(diff(eic$rt)) * 0.5)
+  min.valley.scale = round(valleywidth.min / mean(diff(eic[,"rt"])) * 0.5)
   
   #Wavelet Analysis
-  wCoefs = { if (smooth) eic$i.sg else eic$i } %>% cwt(., scales, "mexh")
+  wCoefs = { if (smooth) eic[,"i.sg"] else eic[,"i"] } %>% cwt(., scales, "mexh")
   rL = getLocalMaximumCWT(wCoefs) %>% getRidge(.)
   
-  vL = { if (smooth) eic$i.sg else eic$i } %>% cwt(., scales, "nmexh") %>% getLocalMaximumCWT(.) %>% getRidge(.)
+  vL = { if (smooth) eic[,"i.sg"] else eic[,"i"] } %>% cwt(., scales, "nmexh") %>% getLocalMaximumCWT(.) %>% getRidge(.)
   if (length(vL) < 1) {
     valleys = 0
     } else {
@@ -82,8 +79,8 @@ wave = function(eic, peakwidth=c(20,50), valleywidth.min = 10, sensitivity = 1, 
     x = data.frame(ridge = x, scale = scales[seq_along(x)])
     
     # Remove poor ridges
-    x = x[x$ridge %in% which(eic$inroi==1),,drop=F]
-    x = { if (smooth) eic$i.sg else eic$i } %>% { x[which(.[x$ridge] - eic$baseline[x$ridge] > 1/sensitivity * eic$noise.local.sd[x$ridge]),,drop=F] }
+    x = x[x$ridge %in% which(eic[,"inroi"]==1),,drop=F]
+    x = { if (smooth) eic[,"i.sg"] else eic[,"i"] } %>% { x[which(.[x$ridge] - eic[x$ridge,"baseline"] > 1/sensitivity * eic[x$ridge,"noise.sd"]),,drop=F] }
     if (nrow(x) == 0) { return(NULL) } # Peak not in ROI
     
     # Limit the possible scales to those which don't overlap a valley
@@ -91,26 +88,26 @@ wave = function(eic, peakwidth=c(20,50), valleywidth.min = 10, sensitivity = 1, 
     
     # Pick the scale which captures the greatest intensity
     best.scale.col = sapply(possible.scales, function(i) {
-      x[i,] %>% { c((.$ridge - .$scale), (.$ridge + .$scale)) } %>% {.[.<1] =1; .[. > length(eic$i)] = length(eic$i); . }%>% sum(eic$i[.])
+      x[i,] %>% { c((.$ridge - .$scale), (.$ridge + .$scale)) } %>% {.[.<1] =1; .[. > length(eic[,"i"])] = length(eic[,"i"]); . }%>% sum(eic[,"i"][.])
     }) %>% which.max
     
     best.scale <-  x$scale[best.scale.col]
     if (length(best.scale) < 1) {return(NULL)}
     
     midpos <- x$ridge[best.scale.col]
-    lwpos <- max(min(which(eic$inroi == 1)),midpos - best.scale*1.2)
-    rwpos <- min(midpos + best.scale*1.2, max(which(eic$inroi == 1)))
+    lwpos <- max(min(which(eic[,"inroi"] == 1)),midpos - best.scale*1.2)
+    rwpos <- min(midpos + best.scale*1.2, max(which(eic[,"inroi"] == 1)))
     
     lwpos.ext = lwpos - 1
     rwpos.ext = rwpos + 1
     if (lwpos.ext < 1) {lwpos.ext = 1}
-    if (rwpos.ext > length(eic$i)) {rwpos.ext = length(eic$i)}
+    if (rwpos.ext > length(eic[,"i"])) {rwpos.ext = length(eic[,"i"])}
     
-    height.above.wavelet.baseline = eic$i %>% 
+    height.above.wavelet.baseline = eic[,"i"] %>% 
       { mean(.[(midpos-1):(midpos+1)], na.rm=T) - mean(approx(c(lwpos.ext, rwpos.ext),c(.[lwpos.ext],.[rwpos.ext]), xout = (midpos-1):(midpos+1))$y, na.rm=T) }
-    baseline.mult = eic$i %>% 
+    baseline.mult = eic[,"i"] %>% 
       { mean(.[(midpos-1):(midpos+1)], na.rm=T) / mean(approx(c(lwpos.ext, rwpos.ext),c(.[lwpos.ext],.[rwpos.ext]), xout = (midpos-1):(midpos+1))$y, na.rm=T) }
-    consec.above.noise = max(sapply(strsplit(paste(as.numeric(eic$i[lwpos:rwpos] - mean(approx(c(lwpos.ext, rwpos.ext),c(eic$i[lwpos.ext],eic$i[rwpos.ext]), xout = lwpos:rwpos)$y, na.rm=T) > eic$noise.local.sd[lwpos:rwpos]), collapse=""), "0"), nchar))
+    consec.above.noise = max(sapply(strsplit(paste(as.numeric(eic[,"i"][lwpos:rwpos] - mean(approx(c(lwpos.ext, rwpos.ext),c(eic[,"i"][lwpos.ext],eic[,"i"][rwpos.ext]), xout = lwpos:rwpos)$y, na.rm=T) > eic[,"noise.sd"][lwpos:rwpos]), collapse=""), "0"), nchar))
     
     c(
       wavelet.scale = best.scale, 
@@ -118,7 +115,7 @@ wave = function(eic, peakwidth=c(20,50), valleywidth.min = 10, sensitivity = 1, 
       wavelet.start = lwpos, 
       wavelet.end = rwpos, 
       
-      wavelet.noise.sd = eic$noise.local.sd[midpos],
+      wavelet.noise.sd = eic[,"noise.sd"][midpos],
       wavelet.height.above.waveletbaseline = height.above.wavelet.baseline,
       wavelet.fold.above.waveletbaseline = baseline.mult,
       wavelet.consec.above.noise.sd = consec.above.noise
@@ -131,37 +128,41 @@ wave = function(eic, peakwidth=c(20,50), valleywidth.min = 10, sensitivity = 1, 
   peakinfo = lapply(1:dim(peaks)[1], function(p) {
     
     lm <- descendMin(wCoefs[,as.character(peaks[p,"wavelet.scale"])], istart= peaks[p,"wavelet.location"]) ## find minima
-    gap <- all(eic$i[lm[1]:lm[2]] == 0) ## looks like we got stuck in a gap right in the middle of the peak
-    if ((lm[1]==lm[2]) || gap ) { ## fall-back
-      lm =  { if (smooth) eic$i.sg else eic$i } %>% descendMinTol(., startpos=c(peaks[p,"wavelet.start"], peaks[p,"wavelet.end"]), ceiling(min(scanwidth)/2))
+    if ((abs(lm[1]-lm[2]) < scalerange[1]*0.5) || all(eic[,"i"][lm[1]:lm[2]] == 0) ) { 
+      shrink = floor((peaks[p,"wavelet.end"] - peaks[p,"wavelet.start"])*.1)
+      lm =  { if (smooth) eic[,"i.sg"] else eic[,"i"] } %>% descendMinTol(., startpos=c(peaks[p,"wavelet.start"]+shrink, peaks[p,"wavelet.end"]-shrink), ceiling(min(scalerange)))
     }
     
     ## narrow down peak rt boundaries by skipping things below baseline
-    bl = (eic$i - eic$baseline)[lm[1]:lm[2]]
-    lm.l <-  findEqualGreaterUnsorted(bl,1E-10)
-    lm.r <- findEqualGreaterUnsorted(rev(bl),1E-10)
+    bl = (eic[,"i"] - eic[,"baseline"])[lm[1]:lm[2]]
+    lm.l <-  findEqualGreaterUnsorted(bl,.05*max(eic[,"i"][c(peaks[p,"wavelet.start"]:peaks[p,"wavelet.end"])]))
+    lm.r <- findEqualGreaterUnsorted(rev(bl),.05*max(eic[,"i"][c(peaks[p,"wavelet.start"]:peaks[p,"wavelet.end"])]))
     lm <- lm + c(lm.l - 1, - (lm.r - 1) )
     
+    higher = which(eic[,"i"][lm] > eic[,"i"][c(peaks[p,"wavelet.start"], peaks[p,"wavelet.end"])])
+    if (length(higher) > 0) { lm[higher] = c(peaks[p,"wavelet.start"], peaks[p,"wavelet.end"])[higher] }
+    
+    
     scans = lm[1]:lm[2]
-    centroid.scan = sum(scans * eic$i[scans]) / sum(eic$i[scans])
-    centroid = sum(eic$rt[scans] * eic$i[scans]) / sum(eic$i[scans])
+    centroid.scan = sum(scans * eic[,"i"][scans]) / sum(eic[,"i"][scans])
+    centroid = sum(eic[,"rt"][scans] * eic[,"i"][scans]) / sum(eic[,"i"][scans])
     
     lwpos.ext = min(scans) - 1
     rwpos.ext = max(scans) + 1
     if (lwpos.ext < 1) {lwpos.ext = 1}
-    if (rwpos.ext > length(eic$i)) {rwpos.ext = length(eic$i)}
+    if (rwpos.ext > length(eic[,"i"])) {rwpos.ext = length(eic[,"i"])}
     
-    baseline.mult = { if (smooth) eic$i else eic$i } %>% 
+    baseline.mult = { if (smooth) eic[,"i"] else eic[,"i"] } %>% 
       { mean(.[(centroid.scan-1):(centroid.scan+1)], na.rm=T) / mean(approx(c(lwpos.ext, rwpos.ext),c(.[lwpos.ext],.[rwpos.ext]), xout = (centroid.scan-1):(centroid.scan+1))$y, na.rm=T) }
     
     
     c(
       descent.rtcentroid = centroid,
-      descent.rtmin = eic$rt[min(scans)],
-      descent.rtmax = eic$rt[max(scans)],
-      descent.maxo = max(eic$i[scans]),
-      descent.into = sum(diff(eic$rt[scans])*zoo::rollmean(eic$i[scans],2)),
-      descent.intb = sum(diff(eic$rt[scans])*zoo::rollmean(eic$i[scans] - eic$baseline[scans],2)),
+      descent.rtmin = eic[,"rt"][min(scans)],
+      descent.rtmax = eic[,"rt"][max(scans)],
+      descent.maxo = max(eic[,"i"][scans]),
+      descent.into = sum(diff(eic[,"rt"][scans])*zoo::rollmean(eic[,"i"][scans],2)),
+      descent.intb = sum(diff(eic[,"rt"][scans])*zoo::rollmean(eic[,"i"][scans] - eic[,"baseline"][scans],2)),
       descent.fold.above.descentbaseline = baseline.mult
     )
   }) %>% do.call(rbind, .)
@@ -169,7 +170,7 @@ wave = function(eic, peakwidth=c(20,50), valleywidth.min = 10, sensitivity = 1, 
   overlaps = { outer(peaks[,"wavelet.location"], peaks[,"wavelet.start"], ">") & outer(peaks[,"wavelet.location"], peaks[,"wavelet.end"], "<") } %>% { diag(.) = F; . } %>% matrixStats::rowAnys(.)
   
   cols.tort = c("wavelet.location", "wavelet.start", "wavelet.end")
-  peaks.rt = peaks[,cols.tort,drop=F]; peaks.rt[] = eic$rt[peaks.rt]; colnames(peaks.rt) = paste(cols.tort, ".rt", sep="")
+  peaks.rt = peaks[,cols.tort,drop=F]; peaks.rt[] = eic[,"rt"][peaks.rt]; colnames(peaks.rt) = paste(cols.tort, ".rt", sep="")
   
   as.data.frame(cbind(peakinfo, peaks, peaks.rt)[!overlaps, ,drop=F])
 }
