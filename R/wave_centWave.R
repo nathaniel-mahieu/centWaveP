@@ -156,13 +156,15 @@ wave = function(eic, peakwidth=c(20,50), valleywidth.min = 7, sensitivity = 1, s
       { mean(.[(centroid.scan-1):(centroid.scan+1)], na.rm=T) / mean(approx(c(lwpos.ext, rwpos.ext),c(.[lwpos.ext],.[rwpos.ext]), xout = (centroid.scan-1):(centroid.scan+1))$y, na.rm=T) }
     
     
+    scans2 = if (length(scans) < 2) c(NA, scans) else scans
+    
     c(
       descent.rtcentroid = centroid,
       descent.rtmin = eic[,"rt"][min(scans)],
       descent.rtmax = eic[,"rt"][max(scans)],
       descent.maxo = max(eic[,"i"][scans]),
-      descent.into = sum(diff(eic[,"rt"][scans])*zoo::rollmean(eic[,"i"][scans],2)),
-      descent.intb = sum(diff(eic[,"rt"][scans])*zoo::rollmean(eic[,"i"][scans] - eic[,"baseline"][scans],2)),
+      descent.into = sum(diff(eic[,"rt"][scans2])*zoo::rollmean(eic[,"i"][scans2],2)),
+      descent.intb = sum(diff(eic[,"rt"][scans2])*zoo::rollmean(eic[,"i"][scans2] - eic[,"baseline"][scans2],2)),
       descent.fold.above.descentbaseline = baseline.mult
     )
   }) %>% do.call(rbind, .)
