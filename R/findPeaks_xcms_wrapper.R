@@ -43,6 +43,10 @@ cent.xr = function(xr, ppm = 2, prefilter = c(0,0), maxskip = 0) {
 #' 
 roiToEic = function(roi, xr, padding = 50) {
   maxscan = length(xr@scantime)
+  mzrange = c(roi$mzmin, roi$mzmax)
+  
   scrange = c(roi$scmin - padding, roi$scmax+padding) %>% {.[. < 1] = 1; .[. > maxscan] = maxscan; .}
-  xcms::rawEIC(xr, mzrange = c(roi$mzmin, roi$mzmax), scanrange = scrange) %>% { names(.) = c("s", "i"); . } %>% { .$rt = xr@scantime[.$s]; .$inroi = .$s >= roi$scmin & .$s <= roi$scmax; . } %>% do.call(what = cbind) 
+  
+  rawMzs = xcms:::rawMZ(xr, mzrange = mzrange, scanrange = scrange)
+  xcms::rawEIC(xr, mzrange = mzrange, scanrange = scrange) %>% { names(.) = c("s", "i"); . } %>% { .$rt = xr@scantime[.$s]; .$inroi = .$s >= roi$scmin & .$s <= roi$scmax; .$mz = rawMzs; . } %>% do.call(what = cbind) 
   }

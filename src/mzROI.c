@@ -545,7 +545,7 @@ SEXP findmzROI(SEXP mz, SEXP intensity, SEXP scanindex, SEXP mzrange, SEXP scanr
   for(i = 0; i < N_NAMES; i++)
     SET_STRING_ELT(list_names, i,  mkChar(names[i]));
 
-  Rprintf(" %% finished: ");
+  Rprintf(" %% finished cent: ");
   for (ctScan=scanrangeFrom;ctScan<=scanrangeTo;ctScan++)
   {
      perc = (int) (ctScan* 100)/scanrangeTo;
