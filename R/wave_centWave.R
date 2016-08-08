@@ -70,7 +70,7 @@ wave = function(eic, peakwidth=c(20,50), valleywidth.min = 7, sensitivity = 1, s
   if (length(vL) < 1) {
     valleys = 0
     } else {
-    valleys = sapply(vL, length) %>% { scales[.] > min.valley.scale } %>% which(.) %>% { sapply(vL[.], '[[', 1) }
+    valleys = sapply(vL, length) %>% { scales[.] > min.valley.scale } %>% which(.) %>% { unlist(sapply(vL[.], '[[', 1)) }
     }
   
   #Go through ridges and choose best scale
