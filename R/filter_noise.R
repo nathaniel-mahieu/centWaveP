@@ -59,10 +59,10 @@ findLorentzianNoise = function(p, lorentzian, peaks) {
 #' @export
 #' 
 getLorentzianPeakshape = function(mass, resolution) {
-  resolution = resolution.calc(p$mz) # m/dm
+  resolution = resolution.calc(mass) # m/dm
   
-  fwhm = p$mz/resolution
-  function(mz) dcauchy(mz, location = p$mz, scale = fwhm/4, log = FALSE)/dcauchy(p$mz, location = p$mz, scale = fwhm/4, log = FALSE)
+  fwhm = mass/resolution
+  function(mz) dcauchy(mz, location = mass, scale = fwhm/4, log = FALSE)/dcauchy(mass, location = mass, scale = fwhm/4, log = FALSE)
 }
 
 #' Takes a peak table and filters searches for black bar artifacts and lorentzian noise
