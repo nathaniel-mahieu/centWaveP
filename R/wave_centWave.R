@@ -64,9 +64,9 @@ wave = function(eic, peakwidth=c(20,50), valleywidth.min = 7, sensitivity = 1, s
   
   #Wavelet Analysis
   wCoefs = { if (smooth) eic[,"i.sg"] else eic[,"i"] } %>% cwt(., scales, "mexh")
-  rL = getLocalMaximumCWT(wCoefs) %>% getRidge(.)
+  rL = centWaveP:::getLocalMaximumCWT(wCoefs) %>% centWaveP:::getRidge(.)
   
-  vL = { if (smooth) eic[,"i.sg"] else eic[,"i"] } %>% cwt(., scales, "nmexh") %>% getLocalMaximumCWT(.) %>% getRidge(.)
+  vL = { if (smooth) eic[,"i.sg"] else eic[,"i"] } %>% cwt(., scales, "nmexh") %>% centWaveP:::getLocalMaximumCWT(.) %>% centWaveP:::getRidge(.)
   if (length(vL) < 1) {
     valleys = 0
     } else {
@@ -95,8 +95,8 @@ wave = function(eic, peakwidth=c(20,50), valleywidth.min = 7, sensitivity = 1, s
     if (length(best.scale) < 1) {return(NULL)}
     
     midpos <- x$ridge[best.scale.col]
-    lwpos <- max(min(which(eic[,"inroi"] == 1)),midpos - best.scale*1.2)
-    rwpos <- min(midpos + best.scale*1.2, max(which(eic[,"inroi"] == 1)))
+    lwpos <- ceiling(max(min(which(eic[,"inroi"] == 1)),midpos - best.scale*1.2))
+    rwpos <- floor(min(midpos + best.scale*1.2, max(which(eic[,"inroi"] == 1))))
     
     lwpos.ext = lwpos - 1
     rwpos.ext = rwpos + 1
@@ -127,10 +127,10 @@ wave = function(eic, peakwidth=c(20,50), valleywidth.min = 7, sensitivity = 1, s
   
   peakinfo = lapply(1:dim(peaks)[1], function(p) {
     
-    lm <- descendMin(wCoefs[,as.character(peaks[p,"wavelet.scale"])], istart= peaks[p,"wavelet.location"]) ## find minima
+    lm <- centWaveP:::descendMin(wCoefs[,as.character(peaks[p,"wavelet.scale"])], istart= peaks[p,"wavelet.location"]) ## find minima
     if ((abs(lm[1]-lm[2]) < scalerange[1]*0.5) || all(eic[,"i"][lm[1]:lm[2]] == 0) ) { 
-      shrink = floor((peaks[p,"wavelet.end"] - peaks[p,"wavelet.start"])*.1)
-      lm =  { if (smooth) eic[,"i.sg"] else eic[,"i"] } %>% descendMinTol(., startpos=c(peaks[p,"wavelet.start"]+shrink, peaks[p,"wavelet.end"]-shrink), ceiling(min(scalerange)))
+      shrink = ceiling((peaks[p,"wavelet.end"] - peaks[p,"wavelet.start"])*.1)
+      lm =  { if (smooth) eic[,"i.sg"] else eic[,"i"] } %>% centWaveP:::descendMinTol(., startpos=c(peaks[p,"wavelet.start"]+shrink, peaks[p,"wavelet.end"]-shrink), ceiling(min(scalerange)))
     }
     
     ## narrow down peak rt boundaries by skipping things below baseline
