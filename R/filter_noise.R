@@ -23,7 +23,9 @@ findShoulderPeaks = function(profxr, p, ppm, logintrat = 0.7, totintrat = 0.01) 
   
   targetmz.i = which.min(abs(mzs-p$mz))
   targetmz = mzs[targetmz.i]
-  targeti = max(spectrum[(pks[targetmz.i]-5):(pks[targetmz.i]+5),"intensity"])
+  
+  rangestart = { pks[targetmz.i]-5 } %>% { if (. < 1) 1 else . }
+  targeti = max(spectrum[rangestart:(min(pks[targetmz.i]+5, length(pks))),"intensity"])
   
   dmz = ppm*p$mz / 1E6
   
@@ -59,8 +61,6 @@ findLorentzianNoise = function(p, lorentzian, peaks) {
 #' @export
 #' 
 getLorentzianPeakshape = function(mass, resolution) {
-  resolution = resolution.calc(mass) # m/dm
-  
   fwhm = mass/resolution
   function(mz) dcauchy(mz, location = mass, scale = fwhm/4, log = FALSE)/dcauchy(mass, location = mass, scale = fwhm/4, log = FALSE)
 }
@@ -85,8 +85,7 @@ findNoise = function(peaks, int, resolution.calc, profxr, mirror.ppm=2, mirror.l
   
   tallpeaks = which(peaks$descent.maxo > int)
   
-  lapply(seq_along(tallpeaks), function(j) {
-    i = tallpeaks[j]
+  foreach(i = tallpeaks, j = icount(), .combine=c) %do% {
     cat("\r", round(j/length(tallpeaks)*100), "%      ")
     
     p = peaks[i,]
@@ -95,22 +94,28 @@ findNoise = function(peaks, int, resolution.calc, profxr, mirror.ppm=2, mirror.l
     
     noisepeaks = findLorentzianNoise(p, lor, peaks)
     
-    shoulderpeaks = findShoulderPeaks(profxr, p, mirror.ppm, mirror.logintrat, mirror.totintrat)
-    if (length(shoulderpeaks) > 0) {
-      shouldertf = matrixStats::rowAnys(abs(outer(peaks$mz, shoulderpeaks, "-") / peaks$mz * 1E6) < mirror.ppm)
-    } else {
-      shouldertf = rep(F, length(peaks$mz))
-    }
+    shouldertf = rep(F, length(peaks$mz))
+    if (is.prof(xr)) {
+      shoulderpeaks = findShoulderPeaks(profxr, p, mirror.ppm, mirror.logintrat, mirror.totintrat)
+      if (length(shoulderpeaks) > 0) {
+        shouldertf = matrixStats::rowAnys(abs(outer(peaks$mz, shoulderpeaks, "-") / peaks$mz * 1E6) < mirror.ppm)
+      } 
+    } else { warning('File does not appear to be profile mode.  Shoulder peak search skipped.') }
     
     which(peaks$descent.rtcentroid < p$descent.rtmax & peaks$descent.rtcentroid > p$descent.rtmin & 
             (seq_along(peaks$mz) %in% noisepeaks | shouldertf))
     
-  })
-  
+  }
   
 }
 
 
+is.prof = function(xr, ppm = 1) {
+  l = length(xr@env$mz)/2
+  mzs = xr@env$mz[(l-100):(l+100)]
+  
+  all(quantile(diff(mzs)/mzs[-1] * 1E6,c(0.2, 0.8)) < ppm)
+  }
 
 getSpecNm = function(object, mzrange, scanrange) {
   scan.i = scanrange[1]:scanrange[2]
@@ -126,7 +131,11 @@ getSpecNm = function(object, mzrange, scanrange) {
   intmat <- matrix(nrow = length(uniquemz), ncol = length(scan.i))
   for (i in seq(along = scan.i)) {
     scan <- getScan(object, scan.i[i], mzrange)
-    intmat[,i] <- approx(scan, xout = uniquemz)$y
+    if (nrow(scan) < 2) {
+      intmat[,i] = 0
+    } else {
+      intmat[,i] <- approx(scan, xout = uniquemz)$y
+    }
   }
   
   points <- cbind(mz = uniquemz, intensity = rowMeans(intmat, na.rm=T))

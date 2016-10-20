@@ -156,7 +156,7 @@ int half,mid;
   return(first);
 }
 
-int upperBound(double val,double *mzval,int first, int length){
+int upperBound(double val,double *mzval,int first, int length) {
 int half,mid;
   while (length > 0) {
     half = length >> 1;
@@ -178,13 +178,13 @@ struct mzROIStruct * insertpeak(const double fMass, const double fInten, struct 
 {
   int i,wasfound=FALSE;
   double ddev = (pickOptions->dev *  fMass);
-  int lpos = lower_bound( fMass - ddev,mzval,0,mzLength->mzval);
-  int hpos = upper_bound( fMass + ddev,mzval,lpos,mzLength->mzval - lpos);
+  int lpos = lower_bound( fMass - ddev,mzval,0,mzLength->mzval)-1;
+  int hpos = upper_bound( fMass + ddev,mzval,lpos,mzLength->mzval - lpos)+1;
 
   if (lpos >  mzLength->mzval-1)
-      lpos = mzLength->mzval -1;
+      lpos = mzLength->mzval-1;
   if (hpos >  mzLength->mzval-1)
-      hpos = mzLength->mzval -1 ;
+      hpos = mzLength->mzval-1;
 
   for (i=lpos; i <= hpos; i++)
   {

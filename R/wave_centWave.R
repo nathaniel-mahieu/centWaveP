@@ -145,6 +145,7 @@ wave = function(eic, peakwidth=c(20,50), valleywidth.min = 7, sensitivity = 1, s
     
     scans = lm[1]:lm[2]
     centroid.scan = sum(scans * eic[,"i"][scans]) / sum(eic[,"i"][scans])
+    if (is.na(centroid.scan)) centroid.scan = mean(scans)
     centroid = sum(eic[,"rt"][scans] * eic[,"i"][scans]) / sum(eic[,"i"][scans])
     
     lwpos.ext = min(scans) - 1
