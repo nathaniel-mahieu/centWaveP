@@ -1,0 +1,85 @@
+```{r setup, cache=FALSE, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.width=11, fig.height=12, base64_images=F, fig.align="center", message=F, warning=F, fig.path='figure_comparison/')
+```
+
+```{r}
+
+library(centWaveP)
+library(xcms)
+library(gridExtra)
+library(ggplot2)
+
+set.seed(21)
+
+eic.l = readRDS("../../../Projects/Shoulder Peaks/eic.l.rds")
+
+```
+
+
+
+eics = sample(eic.l, 30)
+
+
+funcs = list(
+  function(x) {baseline::baseline(x, method = "irls")@baseline},
+  function(x) {baseline::baseline(x, method = "rfbaseline", span = 1/3)@baseline},
+  function(x) {baseline::baseline(x, method = "als")@baseline},
+  function(x) {baseline::baseline(x, method = "lowpass")@baseline},
+  function(x) {baseline::baseline(x, method = "peakDetection")@baseline},
+  function(x) {baseline::baseline(x, method = "modpolyfit")@baseline},
+  function(x) {baseline::baseline(x, method = "rollingBall")@baseline}
+  )
+
+foo = lapply(seq_along(funcs), function(i) {
+f = funcs[[i]]
+  foo = lapply(eics, function(eic) {
+    eic = as.data.frame(eic)
+    
+    s = matrix(eic$i, nrow = 1)
+    s[s==0] = 1
+
+  eic$b = c(tryCatch(f(s),  error=function(e) { rep(1E9, length(s)) }))
+  
+  ggplot(eic) + geom_line(aes(x = rt, y = i)) + geom_line(aes(x = rt, y = b, colour = "red")) + theme(legend.position="none", axis.title= element_blank(), axis.text = element_blank()) + ggtitle(i)
+    })
+  
+  do.call(grid.arrange, foo)
+})
+  
+
+```{r}
+
+eics = sample(eic.l, 30)
+
+funcs = cbind(
+  lambda = c(6),
+  p = c(0.05, 0.1, 0.025, 0.2)
+  )
+
+funcs = cbind(
+  lambda = c(4:10),
+  p = c(0.1)
+  )
+
+# 7, 0.1
+
+
+foo = lapply(seq_along(funcs[,1]), function(i) {
+  f = funcs[i,]
+  foo = lapply(eics, function(eic) {
+    eic = as.data.frame(eic)
+    
+    s = matrix(eic$i, nrow = 1)
+    s[s==0] = 1
+
+  eic$b = c(baseline::baseline(s, method = "als", p = f["p"], lambda = f["lambda"])@baseline)
+  
+  ggplot(eic) + geom_line(aes(x = rt, y = i)) + geom_line(aes(x = rt, y = b, colour = "red")) + theme(legend.position="none", axis.title= element_blank(), axis.text = element_blank()) + ggtitle(f)
+    })
+  
+  do.call(grid.arrange, foo)
+})
+
+
+```

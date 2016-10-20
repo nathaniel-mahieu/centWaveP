@@ -10,12 +10,13 @@ opts_chunk$set(fig.width=11, fig.height=12, base64_images=F, fig.align="center",
 library(centWaveP)
 library(xcms)
 library(gridExtra)
+library(ggplot2)
 
+set.seed(21)
 ```
 
 ## centWaveP
 ```{r}
-
 file = "../../../Projects/Datasets/2nm118a_nh2_negative_ecoli_1213/2NM118A_HILICAnnoWgN14_2NM111G_12.mzXML"
 
 xr = xcmsRaw(file, profstep=0)
@@ -25,7 +26,7 @@ eic.l = lapply(sample(roi.l, 3000), roiToEic, xr, padding=100)
 eic.noise.l = lapply(eic.l, estimateBaselineNoise, peakwidth = c(15, 60), minslope.peak = 20000)
 
 peaks = lapply(seq_along(eic.noise.l), function(i) {
-  wave(eic.noise.l[[i]], peakwidth = c(15, 70), valleywidth.min = 15, sensitivity = 1, smooth = T)
+  wave(eic.noise.l[[i]], peakwidth = c(15, 70), valleywidth.min = 9, sensitivity = 1, smooth = T)
 })
 
 index = lapply(seq(peaks), function(i) {
@@ -80,8 +81,8 @@ plotWavePeak = function(i, eic, peaks) {
     geom_vline(data = metadata, aes(xintercept = descent.rtmax, colour="Descent Bounds"), alpha = 0.8) + 
     ggtitle(paste(metadata$sn.sg.above.min)) + 
     scale_colour_manual(name="Colours",values=cols) + 
-    theme_nate() + 
-    coord_cartesian(ylim=c(0,max(metadata$descent.maxo)*1.1)) + ggtitle(paste(sep=" ","wh:",  round(metadata$wavelet.height.above.waveletbaseline,1), "dm:", round(metadata$descent.fold.above.descentbaseline,1), "wm:", round(metadata$wavelet.fold.above.waveletbaseline, 1)))
+    theme_nate() + scale_y_continuous(breaks=NULL) + scale_x_continuous(breaks=NULL) +
+    coord_cartesian(ylim=c(0,max(metadata$descent.maxo)*1.1)) + ggtitle(paste(sep=" ","df:", round(metadata$descent.fold.above.descentbaseline,1), "wf:", round(metadata$wavelet.fold.above.waveletbaseline, 1)))
 }
 ```
 

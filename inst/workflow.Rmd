@@ -1,0 +1,64 @@
+```{r}
+
+library(centWaveP)
+library(xcms)
+library(gridExtra)
+library(ggplot2)
+
+set.seed(21)
+
+```
+
+## centWaveP
+```{r}
+file = "../../../Projects/Datasets/2nm118a_nh2_negative_ecoli_1213/2NM118A_HILICAnnoWgN14_2NM111G_12.mzXML"
+xr = xcmsRaw(file, profstep=0)
+profxr = xcmsRaw("../../../Projects/Datasets/2nm118a_nh2_negative_ecoli_1213_profile/2NM118A_HILICAnnoWgN14_2NM111G_12.mzXML",profstep=0)
+
+roi.l = cent.xr(xr, ppm = 2, prefilter = c(4,0), maxskip = 5) # ppm is added to both sides
+saveRDS(roi.l, "roi.l.rds")
+
+eic.l = lapply(roi.l, roiToEic, xr, padding=100)
+saveRDS(eic.l, "eic.l.rds")
+
+len = length(eic.l)
+eic.noise.l = lapply(seq_along(eic.l), function(i) {
+  cat("\r", round(i/len, 2)*100, "%")
+  estimateBaselineNoise(eic.l[[i]], peakwidth = c(15, 70))
+})
+saveRDS(eic.noise.l, "eic.noise.l.rds")
+
+len = length(eic.noise.l)
+peaks = lapply(seq_along(eic.noise.l), function(i) {
+  cat("\r", round(i/len, 2)*100, "%")
+  found = wave(eic.noise.l[[i]], peakwidth = c(15, 70), valleywidth.min = 9, sensitivity = 1, smooth = T)
+})
+saveRDS(peaks, "peaks.rds")
+
+peaks = lapply(seq(peaks), function(i) {
+  
+  mzrange = c(roi.mzmin = roi.l[[i]]$mzmin, roi.mzmax = roi.l[[i]]$mzmax)
+  
+  mouses = lapply(seq(nrow(peaks[[i]])), function(j) {
+    scans = c(which.min(abs(xr@scantime - peaks[[i]]$descent.rtmin[j])), which.min(abs(xr@scantime - peaks[[i]]$descent.rtmax[j])))
+    
+    masses = do.call(rbind, lapply(seq(from = scans[1], to = scans[2]), getScan, object = xr, mzrange = mzrange))
+    
+    mz = sum(matrixStats::rowProds(masses))/sum(masses[,"intensity"])
+    
+    c(mzmin = min(masses[,"mz"]), mzmax = max(masses[,"mz"]), mz = mz)
+    
+  }) %>% { do.call(rbind, .) }
+  
+  cbind(peaks[[i]], mouses)
+  
+})
+
+peaks = do.call(rbind, peaks)
+saveRDS(peaks, file="peaks2.rds")
+```
+```{r}
+
+
+
+```
